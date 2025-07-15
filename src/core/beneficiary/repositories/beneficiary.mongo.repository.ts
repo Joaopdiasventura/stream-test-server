@@ -17,12 +17,11 @@ export class MongoBeneficiaryRepository implements BeneficiaryRepository {
   }
 
   public async createMany(docs: CreateBeneficiaryDto[]): Promise<void> {
-    await this.beneficiaryModel.bulkWrite(
-      docs.map((doc) => ({
-        insertOne: { document: doc },
-      })),
-      { ordered: false },
-    );
+    await this.beneficiaryModel.insertMany(docs, {
+      ordered: false,
+      lean: true,
+      rawResult: false,
+    });
   }
 
   public async findQuantity(): Promise<number> {

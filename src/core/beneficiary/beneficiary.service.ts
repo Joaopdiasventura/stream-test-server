@@ -13,8 +13,10 @@ export class BeneficiaryService {
     private readonly beneficiaryRepository: BeneficiaryRepository,
   ) {}
 
-  public async create(createBeneficiariesDto: CreateBeneficiaryDto[]): Promise<void> {
-    await this.beneficiaryRepository.createMany(createBeneficiariesDto)
+  public async create(
+    createBeneficiariesDto: CreateBeneficiaryDto[],
+  ): Promise<void> {
+    await this.beneficiaryRepository.createMany(createBeneficiariesDto);
   }
 
   public async findQuantity(): Promise<number> {
@@ -35,8 +37,15 @@ export class BeneficiaryService {
 
     stream.pipe(res);
 
-    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({ stream });
-    const worksheet = workbook.addWorksheet("beneficiarios");
+    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+      stream,
+      useStyles: true,
+      useSharedStrings: true,
+    });
+
+    const worksheet = workbook.addWorksheet("beneficiarios", {
+      views: [{ showGridLines: false }],
+    });
 
     worksheet.columns = [
       { header: "Nome", key: "name", width: 30 },
@@ -44,10 +53,39 @@ export class BeneficiaryService {
       { header: "CPF", key: "cpf", width: 20 },
     ];
 
-    const cursor = this.beneficiaryRepository.findAll();
+    const headerRow = worksheet.getRow(1);
 
-    for await (const { name, age, cpf } of cursor)
-      worksheet.addRow({ name, age, cpf }).commit();
+    headerRow.eachCell((cell) => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF006400" },
+      };
+      cell.font = { color: { argb: "FFFFFFFF" }, bold: true };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
+
+    headerRow.commit();
+
+    for await (const beneficiary of this.beneficiaryRepository.findAll()) {
+      const row = worksheet.addRow(beneficiary);
+      row.eachCell(
+        (cell) =>
+          (cell.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thin" },
+            right: { style: "thin" },
+          }),
+      );
+      row.commit();
+    }
 
     await workbook.commit();
   }

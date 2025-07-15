@@ -4,6 +4,7 @@ import { BeneficiaryController } from "./beneficiary.controller";
 import { MongooseModule } from "@nestjs/mongoose";
 import { BeneficiarySchema } from "@core/beneficiary/entities/beneficiary.entity";
 import { MongoBeneficiaryRepository } from "@core/beneficiary/repositories/beneficiary.mongo.repository";
+import { BeneficiaryGateway } from './beneficiary.gateway';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { MongoBeneficiaryRepository } from "@core/beneficiary/repositories/benef
   providers: [
     BeneficiaryService,
     { provide: "BeneficiaryRepository", useClass: MongoBeneficiaryRepository },
+    BeneficiaryGateway,
   ],
 })
 export class BeneficiaryModule {}
